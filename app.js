@@ -5,7 +5,7 @@ let weeklySpend = parseFloat(localStorage.getItem('ch_weekly_spend')) || 7.00;
 let currentStreak = parseInt(localStorage.getItem('ch_streak')) || 0;
 let totalCleanDays = parseInt(localStorage.getItem('ch_total_clean')) || 0;
 
-// Historial de días
+// Historial
 let historyData = {};
 try {
   const saved = localStorage.getItem('ch_history');
@@ -16,7 +16,7 @@ try {
   historyData = {};
 }
 
-// Configuración inicial del calendario
+// Calendario
 let viewDate = new Date();
 let currentYear = viewDate.getFullYear();
 let currentMonth = viewDate.getMonth();
@@ -29,7 +29,6 @@ const monthNames = [
 let sosInterval = null;
 let sosRemaining = 180;
 
-// Función para obtener la fecha local en formato YYYY-MM-DD
 function formatDate(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -37,7 +36,6 @@ function formatDate(d) {
   return `${y}-${m}-${day}`;
 }
 
-// Inicialización de la aplicación
 function init() {
   const spendInput = document.getElementById('weekly-spend');
   if (spendInput) {
@@ -47,7 +45,6 @@ function init() {
   renderCalendar();
 }
 
-// Actualizar gasto semanal desde el input
 function updateWeeklySpend() {
   const spendInput = document.getElementById('weekly-spend');
   if (spendInput) {
@@ -57,24 +54,23 @@ function updateWeeklySpend() {
   }
 }
 
-// Refrescar todos los contadores de la interfaz
 function updateUI() {
   const todayStr = formatDate(new Date());
   const todayEntry = historyData[todayStr] || { status: 'none', smoked: 0 };
 
-  // Contador de racha consecutiva
+  // Contador de racha
   const streakEl = document.getElementById('streak-days');
   const streakTextEl = document.getElementById('streak-text');
   if (streakEl) streakEl.textContent = currentStreak;
   if (streakTextEl) streakTextEl.textContent = currentStreak === 1 ? 'Día limpio' : 'Días limpios';
 
-  // Cigarros fumados en el día de hoy
+  // Cigarros fumados hoy
   const smokedTodayEl = document.getElementById('cigs-smoked-today');
   if (smokedTodayEl) {
     smokedTodayEl.textContent = parseInt(todayEntry.smoked) || 0;
   }
 
-  // Dinero ahorrado (gasto semanal / 7 * total de días limpios históricos acumulados)
+  // Dinero ahorrado (gasto semanal / 7 * total días limpios acumulados)
   const dailyCost = weeklySpend / 7;
   const moneySaved = (Math.max(0, totalCleanDays) * dailyCost).toFixed(2);
   const moneySavedEl = document.getElementById('money-saved');
@@ -108,14 +104,13 @@ function markDayClean() {
   renderCalendar();
 }
 
-// BOTÓN -: Fumé un cigarro (+1 cigarro hoy y reinicio de racha consecutiva)
+// BOTÓN -: Fumé un cigarro (+1 cigarro hoy y reset de racha consecutiva)
 function registerCigarette() {
   const todayStr = formatDate(new Date());
 
   if (!historyData[todayStr]) {
     historyData[todayStr] = { status: 'relapse', smoked: 1 };
   } else {
-    // Si hoy estaba marcado como limpio y ahora fuma, se descuenta ese día limpio
     if (historyData[todayStr].status === 'clean' && totalCleanDays > 0) {
       totalCleanDays -= 1;
     }
@@ -124,7 +119,7 @@ function registerCigarette() {
     historyData[todayStr].status = 'relapse';
   }
 
-  // La racha consecutiva se pone a 0, pero el dinero ahorrado acumulado se conserva
+  // La racha consecutiva se pone a 0, pero el dinero ahorrado total se conserva
   currentStreak = 0;
 
   saveData();
@@ -132,7 +127,6 @@ function registerCigarette() {
   renderCalendar();
 }
 
-// Guardar en el almacenamiento local del navegador
 function saveData() {
   localStorage.setItem('ch_streak', currentStreak);
   localStorage.setItem('ch_total_clean', totalCleanDays);
@@ -156,14 +150,12 @@ function renderCalendar() {
   if (firstDayIndex === -1) firstDayIndex = 6;
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // Rellenar espacios vacíos al inicio del mes
   for (let i = 0; i < firstDayIndex; i++) {
     const empty = document.createElement('div');
     empty.className = 'day-cell empty';
     grid.appendChild(empty);
   }
 
-  // Renderizar cada día del mes
   for (let d = 1; d <= daysInMonth; d++) {
     const cell = document.createElement('div');
     cell.className = 'day-cell';
@@ -192,19 +184,13 @@ function renderCalendar() {
 
 function prevMonth() {
   currentMonth--;
-  if (currentMonth < 0) {
-    currentMonth = 11;
-    currentYear--;
-  }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
   renderCalendar();
 }
 
 function nextMonth() {
   currentMonth++;
-  if (currentMonth > 11) {
-    currentMonth = 0;
-    currentYear++;
-  }
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
   renderCalendar();
 }
 
@@ -249,5 +235,33 @@ function closeSOS() {
   if (modal) modal.style.display = 'none';
 }
 
-// Iniciar aplicación
+/* ================= BOTÓN DE INSTALACIÓN PWA ================= */
+let deferredPrompt = null;
+const installBtn = document.getElementById('pwa-install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBtn) {
+    installBtn.style.display = 'flex';
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installBtn) installBtn.style.display = 'none';
+});
+
 init();
