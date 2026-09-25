@@ -127,6 +127,26 @@ function registerCigarette() {
   renderCalendar();
 }
 
+// RESETEAR CIGARROS DE HOY (POR ERROR DE PULSACIÓN)
+function resetTodayCigarettes() {
+  const todayStr = formatDate(new Date());
+
+  if (!historyData[todayStr] || (historyData[todayStr].smoked || 0) === 0) {
+    alert('No tienes cigarros registrados hoy.');
+    return;
+  }
+
+  const ok = confirm('¿Quieres poner a 0 los cigarrillos fumados hoy por si pulsaste por error?');
+  if (!ok) return;
+
+  // Eliminar el estado de recaída de hoy
+  delete historyData[todayStr];
+
+  saveData();
+  updateUI();
+  renderCalendar();
+}
+
 function saveData() {
   localStorage.setItem('ch_streak', currentStreak);
   localStorage.setItem('ch_total_clean', totalCleanDays);
