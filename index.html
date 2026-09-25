@@ -158,6 +158,13 @@
       border-color: rgba(255, 255, 255, 0.12);
     }
 
+    .btn-install {
+      background: var(--accent);
+      color: #052e16;
+      font-weight: 700;
+      border: none;
+    }
+
     /* CALENDARIO */
     .cal-header {
       display: flex;
@@ -298,6 +305,11 @@
 <body>
 
 <div class="container">
+  <!-- BOTÓN DIRECTO DE INSTALACIÓN PWA -->
+  <button id="pwa-install-btn" class="btn btn-install" style="display: none;">
+    📲 Instalar CeroHumo en tu dispositivo
+  </button>
+
   <!-- TARJETA PRINCIPAL -->
   <div class="card">
     <div class="hero-stat">
@@ -372,7 +384,9 @@
 <script src="app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' });
+    });
   }
 </script>
 </body>
